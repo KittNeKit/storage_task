@@ -9,11 +9,21 @@ class Storage(ABC):
     def upload_file(
         cls,
         file: UploadFile,
-        **kwargs,
+        credentials: dict,
     ) -> str:
         pass
 
     @classmethod
     @abstractmethod
-    def get_client(cls, **kwargs):
+    def get_client(cls, credentials: dict):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def get_all_objects(cls, credentials: dict):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def validate_credentials(credentials: dict):
         pass
