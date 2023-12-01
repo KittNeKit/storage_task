@@ -50,6 +50,8 @@ class S3AmazonStorage(IStorage):
         if not credentials.get("s3_bucket_name"):
             raise HTTPException(status_code=422, detail="Вкажи нейм бакету, :))))")
         if not credentials.get("aws_access_key_id"):
-            raise HTTPException(status_code=422, detail="Вкажи ключ доступу, :))))")
+            raise HTTPException(
+                status_code=422, detail="Вкажи ключ доступу амазон, :))))"
+            )
         if not credentials.get("aws_secret_access_key"):
             raise HTTPException(status_code=422, detail="Вкажи секретний ключ, :))))")

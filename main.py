@@ -16,9 +16,9 @@ class StorageFactory:
 
     def factory_method(self, credentials: dict):
         if self.storage_name == "s3_amazon":
-            return DropboxStorage(credentials)
-        elif self.storage_name == "dropbox":
             return S3AmazonStorage(credentials)
+        elif self.storage_name == "dropbox":
+            return DropboxStorage(credentials)
 
 
 class StorageModel(BaseModel):
@@ -26,8 +26,8 @@ class StorageModel(BaseModel):
     name: str
 
 
-@app.post("/api/dropbox")
-async def upload_file_dropbox(
+@app.post("/api/upload_file")
+async def upload_file(
     request: Request,
     storage_instance: StorageModel,
     text_file: UploadFile = File(),
@@ -37,40 +37,16 @@ async def upload_file_dropbox(
         storage_instance.credentials
     )
     text_url = storage.upload_file(text_file)
-
-
-@app.post("/api/amazon")
-async def upload_file_amazon(
-    request: Request,
-    aws_access_key_id: str = Form(...),
-    aws_secret_access_key: str = Form(...),
-    s3_bucket_name: str = Form(...),
-    text_file: UploadFile = File(),
-):
-    validate_type_file(text_file)
-    text_url = S3AmazonStorage.upload_file(
-        text_file,
-        {
-            "aws_access_key_id": aws_access_key_id,
-            "aws_secret_access_key": aws_secret_access_key,
-            "s3_bucket_name": s3_bucket_name,
-        },
-    )
     return {"text_url": text_url}
 
 
 @app.get("/api/objects")
 async def get_objects(request: Request):
     request_data = await request.json()
-
-    objects = {}
-    if request_data.get("amazon"):
-        amazon_credentials = request_data["amazon"]
-        objects["amazon"] = S3AmazonStorage.get_all_objects(amazon_credentials)
-    if request_data.get("dropbox"):
-        dropbox_credentials = request_data["dropbox"]
-        objects["dropbox"] = DropboxStorage.get_all_objects(dropbox_credentials)
-
+    objects = {
+        storage_name: StorageFactory(storage_name).factory_method(credentials).get_all_objects()
+        for storage_name, credentials in request_data.items()
+    }
     return objects
 
 

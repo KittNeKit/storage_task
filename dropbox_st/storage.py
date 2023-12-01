@@ -40,4 +40,6 @@ class DropboxStorage(IStorage):
     @staticmethod
     def validate_credentials(credentials: dict):
         if not credentials.get("access_token"):
-            raise HTTPException(status_code=422, detail="Вкажи ключ доступу, :))))")
+            raise HTTPException(
+                status_code=422, detail="Вкажи ключ доступу, дропбокс :))))"
+            )
