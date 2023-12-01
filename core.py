@@ -3,24 +3,24 @@ from abc import ABC, abstractmethod
 from fastapi import UploadFile
 
 
-class Storage(ABC):
-    @classmethod
+class IStorage(ABC):
+    @abstractmethod
+    def __init__(self, credentials):
+        pass
+
     @abstractmethod
     def upload_file(
-        cls,
+        self,
         file: UploadFile,
-        credentials: dict,
     ) -> str:
         pass
 
-    @classmethod
     @abstractmethod
-    def get_client(cls, credentials: dict):
+    def get_client(self):
         pass
 
-    @classmethod
     @abstractmethod
-    def get_all_objects(cls, credentials: dict):
+    def get_all_objects(self):
         pass
 
     @staticmethod

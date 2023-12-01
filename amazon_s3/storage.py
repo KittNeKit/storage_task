@@ -1,43 +1,43 @@
 import boto3
 from fastapi import UploadFile, HTTPException
 
-from core import Storage
+from core import IStorage
 
 
-class AmazonBucket(Storage):
-    @classmethod
+class S3AmazonStorage(IStorage):
+    def __init__(self, credentials):
+        self.validate_credentials(credentials)
+        self.credentials = credentials
+
     def upload_file(
-        cls,
+        self,
         file: UploadFile,
-        credentials: dict,
     ) -> str:
         s3_key = file.filename
-        bucket_name = credentials.pop("s3_bucket_name")
-        s3_client = cls.get_client(credentials)
+        bucket_name = self.credentials.get("s3_bucket_name")
+        s3_client = self.get_client()
 
         s3_client.upload_fileobj(
             file.file, bucket_name, s3_key, ExtraArgs={"ContentType": "text/plain"}
         )
         s3_client.put_object_acl(Bucket=bucket_name, Key=s3_key, ACL="public-read")
-        return cls._get_object_url(bucket_name, s3_key)
+        return self._get_object_url(bucket_name, s3_key)
 
-    @classmethod
-    def get_client(cls, credentials: dict):
-        cls.validate_credentials(credentials)
+    def get_client(self):
         s3_client = boto3.client(
             "s3",
-            aws_access_key_id=credentials["aws_access_key_id"],
-            aws_secret_access_key=credentials["aws_secret_access_key"],
+            aws_access_key_id=self.credentials["aws_access_key_id"],
+            aws_secret_access_key=self.credentials["aws_secret_access_key"],
         )
         return s3_client
 
-    @classmethod
-    def get_all_objects(cls, credentials: dict):
-        s3_client = cls.get_client(credentials)
-        bucket_name = credentials.get("s3_bucket_name")
+    def get_all_objects(self):
+        s3_client = self.get_client()
+        bucket_name = self.credentials.get("s3_bucket_name")
         objects = s3_client.list_objects_v2(Bucket=bucket_name)["Contents"]
         objects_url = [
-            cls._get_object_url(bucket_name, object["Key"]) for object in objects
+            self._get_object_url(bucket_name, object_instance["Key"])
+            for object_instance in objects
         ]
         return objects_url
 

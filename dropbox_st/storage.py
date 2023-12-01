@@ -1,35 +1,36 @@
 from dropbox import Dropbox
 from dropbox.files import WriteMode
-from dropbox.exceptions import AuthError
 from fastapi import UploadFile, HTTPException
 
-from core import Storage
+from core import IStorage
 
 
-class DropboxStorage(Storage):
-    @classmethod
+class DropboxStorage(IStorage):
+    def __init__(self, credentials):
+        self.validate_credentials(credentials)
+        self.credentials = credentials
+
     def upload_file(
-        cls,
+        self,
         file: UploadFile,
-        credentials: dict,
     ) -> str:
-        dbx = cls.get_client(credentials)
+        dbx = self.get_client()
         upload_result = dbx.files_upload(
             file.file.read(), f"/{file.filename}", mode=WriteMode("overwrite")
         )
         return f"https://www.dropbox.com/preview/{upload_result.name}"
 
-    @classmethod
-    def get_client(cls, credentials: dict):
-        cls.validate_credentials(credentials)
-        dbx = Dropbox(credentials.get("access_token"))
+    def get_client(self):
+        dbx = Dropbox(self.credentials.get("access_token"))
         return dbx
 
-    @classmethod
-    def get_all_objects(cls, credentials: dict):
-        dbx = cls.get_client(credentials)
+    def get_all_objects(self):
+        dbx = self.get_client()
         objects = dbx.files_list_folder(path="")
-        objects_url = [cls._get_object_url(object.name) for object in objects.entries]
+        objects_url = [
+            self._get_object_url(object_instance.name)
+            for object_instance in objects.entries
+        ]
         return objects_url
 
     @staticmethod
